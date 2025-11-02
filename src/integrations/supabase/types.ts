@@ -14,7 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      inscritos: {
+        Row: {
+          categoria: string
+          cosplay: string
+          created: number
+          created_at: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          categoria: string
+          cosplay: string
+          created?: number
+          created_at?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          categoria?: string
+          cosplay?: string
+          created?: number
+          created_at?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      notas: {
+        Row: {
+          id: string
+          jurado_1: number | null
+          jurado_2: number | null
+          jurado_3: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          id: string
+          jurado_1?: number | null
+          jurado_2?: number | null
+          jurado_3?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          jurado_1?: number | null
+          jurado_2?: number | null
+          jurado_3?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "inscritos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
