@@ -1,12 +1,92 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { useCosplayData } from "@/hooks/useCosplayData";
+import { Header } from "@/components/cosplay/Header";
+import { Home } from "@/components/cosplay/Home";
+import { Inscricoes } from "@/components/cosplay/Inscricoes";
+import { Avaliacao } from "@/components/cosplay/Avaliacao";
+import { Ranking } from "@/components/cosplay/Ranking";
+import { Kpop } from "@/components/cosplay/Kpop";
+import { exportPdfApresentacao } from "@/lib/pdf-utils";
+import logo from "@/assets/logo.png";
 
 const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+  const [activeView, setActiveView] = useState("home");
+  const { inscritos, notas, loading, addInscrito, deleteInscrito, setNota } = useCosplayData();
+
+  const handleExportPdf = () => {
+    exportPdfApresentacao(inscritos, logo);
+  };
+
+  const renderActiveView = () => {
+    switch (activeView) {
+      case "inscricoes":
+        return (
+          <Inscricoes 
+            inscritos={inscritos}
+            loading={loading}
+            onAdd={addInscrito}
+            onDelete={deleteInscrito}
+          />
+        );
+      case "avaliacao":
+        return (
+          <Avaliacao 
+            inscritos={inscritos}
+            notas={notas}
+            loading={loading}
+            onSetNota={setNota}
+          />
+        );
+      case "ranking":
+        return (
+          <Ranking 
+            inscritos={inscritos}
+            notas={notas}
+            loading={loading}
+          />
+        );
+      case "kpop":
+        return (
+          <Kpop 
+            inscritos={inscritos}
+            notas={notas}
+            loading={loading}
+            onSetNota={setNota}
+          />
+        );
+      default:
+        return (
+          <Home 
+            inscritos={inscritos}
+            notas={notas}
+            onNavigate={setActiveView}
+            onExportPdf={handleExportPdf}
+          />
+        );
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <p className="mt-4 text-muted-foreground">Carregando...</p>
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header 
+        activeView={activeView} 
+        onNavigate={setActiveView}
+        onExportPdf={handleExportPdf}
+      />
+      <main className="container mx-auto px-4 py-8">
+        {renderActiveView()}
+      </main>
     </div>
   );
 };
