@@ -49,9 +49,9 @@ export function Home({ inscritos, notas, onNavigate, onExportPdf }: HomeProps) {
       action: () => onNavigate("ranking")
     },
     {
-      title: "📄 Gerar Apresentação",
-      description: "Exporte PDF com lista ordenada de participantes para apresentação no evento",
-      action: onExportPdf
+      title: "📊 Dashboard Analítico",
+      description: "Acompanhe estatísticas em tempo real com gráficos e métricas de desempenho",
+      action: () => onNavigate("ranking")
     }
   ];
 
@@ -80,6 +80,10 @@ export function Home({ inscritos, notas, onNavigate, onExportPdf }: HomeProps) {
             <span>⭐</span>
             <span>Avaliar Participantes</span>
           </Button>
+          <Button size="lg" variant="outline" onClick={() => onNavigate("ranking")}>
+            <span>📊</span>
+            <span>Ver Dashboard</span>
+          </Button>
           <Button size="lg" variant="outline" onClick={onExportPdf}>
             <span>📄</span>
             <span>Gerar PDF</span>
@@ -90,13 +94,12 @@ export function Home({ inscritos, notas, onNavigate, onExportPdf }: HomeProps) {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: "Participantes", value: totalInscritos, icon: "👥" },
-          { label: "Categorias", value: totalCategorias, icon: "🎭" },
-          { label: "Avaliações", value: totalNotas, icon: "⭐" },
-          { label: "Média Geral", value: avgScore, icon: "📊" }
+          { label: "Participantes", value: totalInscritos },
+          { label: "Categorias", value: totalCategorias },
+          { label: "Avaliações", value: totalNotas },
+          { label: "Média Geral", value: avgScore }
         ].map((stat, i) => (
           <Card key={i} className="p-6 text-center border-border bg-card hover:border-primary transition-all hover:shadow-lg hover:shadow-primary/10">
-            <div className="text-4xl mb-2">{stat.icon}</div>
             <div className="text-3xl font-bold bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
               {stat.value}
             </div>
