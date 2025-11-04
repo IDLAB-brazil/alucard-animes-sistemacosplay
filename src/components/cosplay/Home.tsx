@@ -112,23 +112,26 @@ export function Home({ inscritos, notas, onNavigate, onExportPdf }: HomeProps) {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {quickActions.map((action, i) => (
-          <Card 
-            key={i}
-            className="p-6 border-border bg-card hover:border-primary transition-all cursor-pointer group hover:shadow-lg hover:shadow-primary/10"
-            onClick={action.action}
-          >
-            <h3 className="text-lg font-semibold text-secondary mb-2 group-hover:text-accent transition-colors">
-              {action.title}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-              {action.description}
-            </p>
-            <Button className="w-full bg-gradient-to-r from-primary to-accent">
-              Acessar
-            </Button>
-          </Card>
-        ))}
+        {quickActions.map((action, i) => {
+          const buttonTexts = ["Acessar", "Avaliar", "Ver Ranking", "Dashboard"];
+          return (
+            <Card 
+              key={i}
+              className="p-6 border-border bg-card hover:border-primary transition-all cursor-pointer group hover:shadow-lg hover:shadow-primary/10"
+              onClick={action.action}
+            >
+              <h3 className="text-lg font-semibold text-secondary mb-2 group-hover:text-accent transition-colors">
+                {action.title}
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                {action.description}
+              </p>
+              <Button className="w-full bg-gradient-to-r from-primary to-accent">
+                {buttonTexts[i]}
+              </Button>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
