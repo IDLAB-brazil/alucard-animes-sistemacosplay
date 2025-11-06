@@ -1,4 +1,6 @@
 import logo from "@/assets/logo.png";
+import { useAuth } from "@/contexts/AuthContext";
+import { LogOut, User } from "lucide-react";
 
 interface HeaderProps {
   activeView: string;
@@ -7,6 +9,8 @@ interface HeaderProps {
 }
 
 export function Header({ activeView, onNavigate, onExportPdf }: HeaderProps) {
+  const { user, signOut, hasRole } = useAuth();
+  
   const navItems = [
     { id: "inscricoes", label: "Inscrições", icon: "📝" },
     { id: "ranking", label: "Ranking", icon: "🏆" },
@@ -58,6 +62,29 @@ export function Header({ activeView, onNavigate, onExportPdf }: HeaderProps) {
             >
               <span>📄</span>
               <span className="hidden sm:inline">Apresentação</span>
+            </button>
+            
+            <div className="flex items-center gap-2 px-3 py-2 text-xs border border-border rounded-lg bg-muted/50">
+              <User className="h-3 w-3" />
+              <span className="hidden md:inline max-w-[120px] truncate">{user?.email}</span>
+              {hasRole('admin') && (
+                <span className="px-1.5 py-0.5 bg-primary/20 text-primary rounded text-[10px] font-semibold">
+                  ADMIN
+                </span>
+              )}
+              {hasRole('judge') && (
+                <span className="px-1.5 py-0.5 bg-accent/20 text-accent rounded text-[10px] font-semibold">
+                  JURADO
+                </span>
+              )}
+            </div>
+            
+            <button
+              onClick={() => signOut()}
+              className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-border hover:border-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
+              title="Sair"
+            >
+              <LogOut className="h-4 w-4" />
             </button>
           </nav>
         </div>
