@@ -7,6 +7,7 @@ import type { Inscrito, Nota, RankingItem } from "@/lib/cosplay-types";
 import { KPOP_CATEGORIES } from "@/lib/cosplay-types";
 import { byOrder, getJurorScores, calculateMedia, median, desvio } from "@/lib/cosplay-utils";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface KpopProps {
   inscritos: Inscrito[];
@@ -16,6 +17,9 @@ interface KpopProps {
 }
 
 export function Kpop({ inscritos, notas, loading, onSetNota }: KpopProps) {
+  const { hasRole } = useAuth();
+  const canEdit = hasRole('admin') || hasRole('judge');
+  
   const [activeTab, setActiveTab] = useState<"avaliacao" | "ranking">("avaliacao");
 
   const kpopList = inscritos
@@ -82,6 +86,7 @@ export function Kpop({ inscritos, notas, loading, onSetNota }: KpopProps) {
                         step="0.5"
                         value={nota[`jurado_${jurorIdx + 1}` as keyof Nota] ?? ""}
                         onChange={(e) => onSetNota(inscrito.id, jurorIdx, e.target.value)}
+                        disabled={!canEdit}
                         className="w-20 border-input bg-background text-center"
                       />
                     </TableCell>

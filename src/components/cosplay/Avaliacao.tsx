@@ -5,6 +5,7 @@ import type { Inscrito, Nota } from "@/lib/cosplay-types";
 import { DEFAULT_JURORS, CATEGORIES_WITHOUT_SCORES } from "@/lib/cosplay-types";
 import { byOrder, groupSmallCategories, shouldShowInAvaliacao, getJurorScores, calculateMedia } from "@/lib/cosplay-utils";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AvaliacaoProps {
   inscritos: Inscrito[];
@@ -14,6 +15,9 @@ interface AvaliacaoProps {
 }
 
 export function Avaliacao({ inscritos, notas, loading, onSetNota }: AvaliacaoProps) {
+  const { hasRole } = useAuth();
+  const canEdit = hasRole('admin') || hasRole('judge');
+  
   const filteredInscritos = inscritos.filter(it => shouldShowInAvaliacao(it.categoria));
   const groupedInscritos = groupSmallCategories(filteredInscritos);
   const sortedInscritos = [...groupedInscritos].sort(byOrder);
@@ -91,6 +95,7 @@ export function Avaliacao({ inscritos, notas, loading, onSetNota }: AvaliacaoPro
                               step="0.5"
                               value={nota[`jurado_${jurorIdx + 1}` as keyof Nota] ?? ""}
                               onChange={(e) => onSetNota(inscrito.id, jurorIdx, e.target.value)}
+                              disabled={!canEdit}
                               className="w-20 border-input bg-background"
                             />
                           </TableCell>
