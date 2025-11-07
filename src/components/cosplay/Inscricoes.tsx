@@ -8,7 +8,6 @@ import type { Inscrito } from "@/lib/cosplay-types";
 import { CATEGORIES, KPOP_CATEGORIES } from "@/lib/cosplay-types";
 import { byOrder } from "@/lib/cosplay-utils";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface InscricoesProps {
   inscritos: Inscrito[];
@@ -18,9 +17,6 @@ interface InscricoesProps {
 }
 
 export function Inscricoes({ inscritos, loading, onAdd, onDelete }: InscricoesProps) {
-  const { hasRole } = useAuth();
-  const isAdmin = hasRole('admin');
-  
   const [nome, setNome] = useState("");
   const [categoria, setCategoria] = useState("");
   const [cosplay, setCosplay] = useState("");
@@ -67,14 +63,13 @@ export function Inscricoes({ inscritos, loading, onAdd, onDelete }: InscricoesPr
 
   return (
     <div className="space-y-6">
-      {isAdmin && (
-        <Card className="p-6 border-border bg-card">
-          <h2 className="text-2xl font-bold text-primary mb-6 flex items-center gap-2">
-            <span>📝</span>
-            <span>Gerenciar Inscrições</span>
-          </h2>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">{/* form content */}
+      <Card className="p-6 border-border bg-card">
+        <h2 className="text-2xl font-bold text-primary mb-6 flex items-center gap-2">
+          <span>📝</span>
+          <span>Gerenciar Inscrições</span>
+        </h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label htmlFor="nome" className="flex items-center gap-2">
@@ -147,7 +142,6 @@ export function Inscricoes({ inscritos, loading, onAdd, onDelete }: InscricoesPr
           </div>
         </form>
       </Card>
-      )}
 
       <Card className="p-6 border-border bg-card">
         <h3 className="text-xl font-semibold text-primary mb-4 flex items-center gap-2">
@@ -184,17 +178,15 @@ export function Inscricoes({ inscritos, loading, onAdd, onDelete }: InscricoesPr
                       <div className="font-semibold">{inscrito.nome}</div>
                       <div className="text-sm text-muted-foreground">{inscrito.cosplay}</div>
                     </div>
-                    {isAdmin && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(inscrito.id)}
-                        className="hover:bg-destructive hover:text-destructive-foreground"
-                      >
-                        <span>🗑️</span>
-                        <span className="ml-2">Excluir</span>
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(inscrito.id)}
+                      className="hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <span>🗑️</span>
+                      <span className="ml-2">Excluir</span>
+                    </Button>
                   </div>
                 </div>
               );
