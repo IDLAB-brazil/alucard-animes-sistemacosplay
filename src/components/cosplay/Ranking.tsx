@@ -1,9 +1,12 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import type { Inscrito, Nota } from "@/lib/cosplay-types";
 import { CATEGORIES, CATEGORIES_WITHOUT_SCORES } from "@/lib/cosplay-types";
 import { byOrder, groupSmallCategories, shouldShowInAvaliacao, getJurorScores, median, desvio } from "@/lib/cosplay-utils";
 import type { RankingItem } from "@/lib/cosplay-types";
-import { Loader2 } from "lucide-react";
+import { Loader2, FileDown, FileSpreadsheet } from "lucide-react";
+import { exportRankingToExcel } from "@/lib/excel-utils";
+import { generateRankingPDF } from "@/lib/pdf-utils";
 
 interface RankingProps {
   inscritos: Inscrito[];
@@ -47,13 +50,77 @@ export function Ranking({ inscritos, notas, loading }: RankingProps) {
     );
   }
 
+  const allRankings: { categoria: string; ganhadores: RankingItem[] }[] = [];
+  
+  CATEGORIES.forEach((cat) => {
+    if (CATEGORIES_WITHOUT_SCORES.includes(cat as any)) return;
+    
+    const itemsForCat = porCat[cat] || [];
+    if (cat !== "DESFILE LIVRE" && itemsForCat.length < 3) return;
+    if (!itemsForCat.length) return;
+
+    const items: RankingItem[] = itemsForCat
+      .map((it) => {
+        const scores = getJurorScores(notas[it.id]);
+        if (!scores.length) return null;
+
+        return {
+          it,
+          media: +(scores.reduce((p, c) => p + c, 0) / scores.length).toFixed(2),
+          med: median(scores),
+          desv: desvio(scores),
+        };
+      })
+      .filter((x): x is RankingItem => x !== null)
+      .sort((a, b) => {
+        if (b.media !== a.media) return b.media - a.media;
+        if (b.med !== a.med) return b.med - a.med;
+        if (a.desv !== b.desv) return a.desv - b.desv;
+        return a.it.created - b.it.created;
+      })
+      .slice(0, 3);
+    
+    if (items.length > 0) {
+      allRankings.push({ categoria: cat, ganhadores: items });
+    }
+  });
+
+  const handleExportExcel = () => {
+    exportRankingToExcel(allRankings);
+  };
+
+  const handleExportPDF = () => {
+    generateRankingPDF(allRankings);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
           <span>🏆</span>
           <span>Rankings por Categoria</span>
         </h2>
+        
+        {allRankings.length > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              onClick={handleExportPDF}
+              variant="outline"
+              className="gap-2"
+            >
+              <FileDown className="h-4 w-4" />
+              <span>Exportar PDF</span>
+            </Button>
+            <Button
+              onClick={handleExportExcel}
+              variant="outline"
+              className="gap-2"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              <span>Exportar Excel</span>
+            </Button>
+          </div>
+        )}
       </div>
 
       {CATEGORIES.map((cat) => {

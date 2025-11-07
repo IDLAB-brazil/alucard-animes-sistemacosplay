@@ -157,3 +157,71 @@ export async function exportRankingPdf(inscritos: Inscrito[], notas: Record<stri
 
   doc.save('ranking_cosplay.pdf');
 }
+
+export function generateRankingPDF(rankings: { categoria: string; ganhadores: RankingItem[] }[]) {
+  const doc = new jsPDF();
+
+  doc.setFontSize(22);
+  doc.setTextColor(255, 215, 0);
+  doc.text('Ganhadores do Concurso de Cosplay', 14, 20);
+  doc.setFontSize(12);
+  doc.setTextColor(150, 150, 150);
+  doc.text('Gerado em: ' + new Date().toLocaleDateString('pt-BR'), 14, 28);
+
+  let finalY = 40;
+
+  for (const { categoria, ganhadores } of rankings) {
+    if (ganhadores.length === 0) continue;
+
+    // Check if we need a new page
+    if (finalY > 250) {
+      doc.addPage();
+      finalY = 20;
+    }
+
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`Categoria: ${categoria}`, 14, finalY);
+    finalY += 10;
+
+    const tableColumn = ["Posição", "Nome", "Personagem/Cosplay", "Média", "Mediana", "Desvio"];
+    const tableRows: any[] = [];
+
+    ganhadores.forEach((ganhador, index) => {
+      tableRows.push([
+        index + 1,
+        ganhador.it.nome,
+        ganhador.it.cosplay,
+        ganhador.media.toFixed(2),
+        ganhador.med.toFixed(2),
+        ganhador.desv.toFixed(2)
+      ]);
+    });
+
+    (doc as any).autoTable(tableColumn, tableRows, {
+      startY: finalY,
+      headStyles: { fillColor: [42, 42, 42], textColor: [255, 215, 0], fontStyle: 'bold' },
+      bodyStyles: { fillColor: [26, 26, 26], textColor: [255, 255, 255] },
+      alternateRowStyles: { fillColor: [33, 33, 33] },
+      margin: { top: 5, left: 10, right: 10, bottom: 10 },
+      styles: { font: 'helvetica', fontSize: 10, cellPadding: 3, overflow: 'linebreak' },
+      columnStyles: {
+        0: { cellWidth: 20, halign: 'center' },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 50 },
+        3: { cellWidth: 20, halign: 'center' },
+        4: { cellWidth: 20, halign: 'center' },
+        5: { cellWidth: 20, halign: 'center' }
+      },
+      didDrawPage: function (data: any) {
+        let str = 'Página ' + (doc as any).internal.getNumberOfPages();
+        doc.setFontSize(10);
+        doc.setTextColor(150, 150, 150);
+        doc.text(str, data.settings.margin.left, (doc as any).internal.pageSize.height - 10);
+      }
+    });
+    finalY = (doc as any).autoTable.previous.finalY + 15;
+  }
+
+  doc.save(`ganhadores_cosplay_${new Date().toISOString().split('T')[0]}.pdf`);
+}

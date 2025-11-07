@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Inscrito } from "@/lib/cosplay-types";
 import { CATEGORIES, KPOP_CATEGORIES } from "@/lib/cosplay-types";
 import { byOrder } from "@/lib/cosplay-utils";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, Download } from "lucide-react";
+import { readExcelFile, downloadExcelTemplate } from "@/lib/excel-utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface InscricoesProps {
   inscritos: Inscrito[];
@@ -21,6 +23,9 @@ export function Inscricoes({ inscritos, loading, onAdd, onDelete }: InscricoesPr
   const [categoria, setCategoria] = useState("");
   const [cosplay, setCosplay] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const getCosplayLabel = () => {
     if (categoria === "ANIMEKÊ") return "Música/Anime";
@@ -55,6 +60,54 @@ export function Inscricoes({ inscritos, loading, onAdd, onDelete }: InscricoesPr
   const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir este participante?")) {
       await onDelete(id);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const rows = await readExcelFile(file);
+      
+      if (rows.length === 0) {
+        toast({
+          title: "Arquivo vazio",
+          description: "O arquivo não contém dados válidos",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      let success = 0;
+      let errors = 0;
+
+      for (const row of rows) {
+        try {
+          await onAdd(row);
+          success++;
+        } catch (error) {
+          errors++;
+        }
+      }
+
+      toast({
+        title: "Upload concluído!",
+        description: `${success} participante(s) adicionado(s)${errors > 0 ? `, ${errors} erro(s)` : ''}`
+      });
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao ler arquivo",
+        description: "Certifique-se que o arquivo Excel está no formato correto",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -141,6 +194,59 @@ export function Inscricoes({ inscritos, loading, onAdd, onDelete }: InscricoesPr
             </Button>
           </div>
         </form>
+
+        <div className="mt-6 pt-6 border-t border-border space-y-4">
+          <h3 className="text-lg font-semibold text-secondary flex items-center gap-2">
+            <span>📊</span>
+            <span>Importação em Massa</span>
+          </h3>
+          
+          <div className="flex gap-4 flex-wrap">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={downloadExcelTemplate}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              <span>Baixar Modelo Excel</span>
+            </Button>
+            
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="gap-2"
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Processando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    <span>Importar Excel</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          <p className="text-sm text-muted-foreground">
+            O arquivo Excel deve conter as colunas: <strong>nome</strong>, <strong>categoria</strong> e <strong>cosplay</strong>
+          </p>
+        </div>
       </Card>
 
       <Card className="p-6 border-border bg-card">
