@@ -1,5 +1,7 @@
 import * as XLSX from 'xlsx';
 import type { Inscrito } from './cosplay-types';
+import { participantSchema } from './validation-schemas';
+import { ZodError } from 'zod';
 
 export interface ExcelRow {
   nome: string;
@@ -19,11 +21,47 @@ export function readExcelFile(file: File): Promise<ExcelRow[]> {
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json<any>(worksheet);
         
-        const rows: ExcelRow[] = jsonData.map((row: any) => ({
-          nome: String(row.nome || row.Nome || row.NOME || '').trim(),
-          categoria: String(row.categoria || row.Categoria || row.CATEGORIA || '').trim().toUpperCase(),
-          cosplay: String(row.cosplay || row.Cosplay || row.COSPLAY || row.personagem || row.Personagem || '').trim()
-        })).filter(row => row.nome && row.categoria && row.cosplay);
+        const rows: ExcelRow[] = [];
+        const errors: string[] = [];
+        
+        jsonData.forEach((row: any, index: number) => {
+          const rawData = {
+            nome: String(row.nome || row.Nome || row.NOME || '').trim(),
+            categoria: String(row.categoria || row.Categoria || row.CATEGORIA || '').trim().toUpperCase(),
+            cosplay: String(row.cosplay || row.Cosplay || row.COSPLAY || row.personagem || row.Personagem || '').trim()
+          };
+          
+          // Skip completely empty rows
+          if (!rawData.nome && !rawData.categoria && !rawData.cosplay) {
+            return;
+          }
+          
+          // Validate each row
+          try {
+            const validatedData = participantSchema.parse(rawData);
+            rows.push({
+              nome: validatedData.nome,
+              categoria: validatedData.categoria,
+              cosplay: validatedData.cosplay
+            });
+          } catch (error) {
+            if (error instanceof ZodError) {
+              const lineNumber = index + 2; // +2 because Excel is 1-indexed and has header row
+              const firstError = error.errors[0];
+              errors.push(`Linha ${lineNumber}: ${firstError.message}`);
+            }
+          }
+        });
+        
+        if (errors.length > 0) {
+          reject(new Error(`Erros de validação encontrados:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n... e mais ${errors.length - 5} erros` : ''}`));
+          return;
+        }
+        
+        if (rows.length === 0) {
+          reject(new Error('Nenhum dado válido encontrado no arquivo'));
+          return;
+        }
         
         resolve(rows);
       } catch (error) {

@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Inscrito, Nota } from "@/lib/cosplay-types";
 import { clampNota } from "@/lib/cosplay-utils";
+import { participantSchema, scoreSchema } from "@/lib/validation-schemas";
+import { ZodError } from "zod";
 
 export function useCosplayData() {
   const [inscritos, setInscritos] = useState<Inscrito[]>([]);
@@ -93,12 +95,19 @@ export function useCosplayData() {
 
   async function addInscrito(inscrito: Omit<Inscrito, 'id' | 'created' | 'created_at'>) {
     try {
+      // Validate input data
+      const validatedData = participantSchema.parse({
+        nome: inscrito.nome,
+        categoria: inscrito.categoria,
+        cosplay: inscrito.cosplay
+      });
+
       const { error } = await supabase
         .from('inscritos')
         .insert({
-          nome: inscrito.nome,
-          categoria: inscrito.categoria,
-          cosplay: inscrito.cosplay,
+          nome: validatedData.nome,
+          categoria: validatedData.categoria,
+          cosplay: validatedData.cosplay,
           created: Date.now()
         });
 
@@ -106,15 +115,25 @@ export function useCosplayData() {
 
       toast({
         title: "Sucesso!",
-        description: `Participante ${inscrito.nome} adicionado com sucesso!`
+        description: `Participante ${validatedData.nome} adicionado com sucesso!`
       });
     } catch (error) {
       console.error('Erro ao adicionar inscrito:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível adicionar o participante",
-        variant: "destructive"
-      });
+      
+      if (error instanceof ZodError) {
+        const firstError = error.errors[0];
+        toast({
+          title: "Dados inválidos",
+          description: firstError.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description: "Não foi possível adicionar o participante",
+          variant: "destructive"
+        });
+      }
       throw error;
     }
   }
@@ -146,6 +165,12 @@ export function useCosplayData() {
   async function setNota(id: string, jurorIndex: number, value: string | number | null) {
     try {
       const clamped = clampNota(value);
+      
+      // Validate score if not null
+      if (clamped !== null) {
+        scoreSchema.parse(clamped);
+      }
+      
       const jurorField = `jurado_${jurorIndex + 1}` as keyof Nota;
 
       const { error } = await supabase
@@ -158,11 +183,21 @@ export function useCosplayData() {
       if (error) throw error;
     } catch (error) {
       console.error('Erro ao salvar nota:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar a avaliação",
-        variant: "destructive"
-      });
+      
+      if (error instanceof ZodError) {
+        const firstError = error.errors[0];
+        toast({
+          title: "Nota inválida",
+          description: firstError.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description: "Não foi possível salvar a avaliação",
+          variant: "destructive"
+        });
+      }
       throw error;
     }
   }
