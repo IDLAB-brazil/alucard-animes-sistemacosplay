@@ -9,6 +9,7 @@ interface HeaderProps {
 export function Header({ activeView, onNavigate, onExportPdf }: HeaderProps) {
   const navItems = [
     { id: "inscricoes", label: "Inscrições", icon: "📝" },
+    { id: "apresentacao", label: "Apresentação", icon: "🎭" },
     { id: "ranking", label: "Ranking", icon: "🏆" },
     { id: "avaliacao", label: "Jurados", icon: "⭐" },
     { id: "kpop", label: "K-pop", icon: "🎵" },
@@ -52,13 +53,6 @@ export function Header({ activeView, onNavigate, onExportPdf }: HeaderProps) {
                 <span className="hidden sm:inline">{item.label}</span>
               </button>
             ))}
-            <button
-              onClick={onExportPdf}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-border hover:border-primary hover:bg-muted transition-all"
-            >
-              <span>📄</span>
-              <span className="hidden sm:inline">Apresentação</span>
-            </button>
           </nav>
         </div>
       </div>
