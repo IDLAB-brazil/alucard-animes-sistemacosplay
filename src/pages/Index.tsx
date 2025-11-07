@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useCosplayData } from "@/hooks/useCosplayData";
 import { Header } from "@/components/cosplay/Header";
+import { Footer } from "@/components/cosplay/Footer";
 import { Home } from "@/components/cosplay/Home";
 import { Inscricoes } from "@/components/cosplay/Inscricoes";
 import { Avaliacao } from "@/components/cosplay/Avaliacao";
@@ -87,15 +88,16 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header 
         activeView={activeView} 
         onNavigate={setActiveView}
         onExportPdf={handleExportPdf}
       />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 flex-1">
         {renderActiveView()}
       </main>
+      <Footer />
     </div>
   );
 };
